@@ -106,7 +106,7 @@ Padded piece:   % 12d bytes
 func main() {
 	app := cli.NewApp()
 	app.Name = "carbites-commp"
-	app.Usage = "Chunking for CAR files + calculating commP."
+	app.Usage = "Chunking for CAR files + calculating commP. Splits a CAR file into smaller CAR files and at the same time also calculates commP for the smaller CAR files."
 	app.Commands = []*cli.Command{
 		splitAndCommPCmd,
 	}
