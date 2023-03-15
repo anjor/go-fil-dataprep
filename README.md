@@ -9,10 +9,10 @@ Inspired by [go-carbites](https://github.com/alanshaw/go-carbites).
 The CLI takes a car file, either as an argument
 
 ```
-~/repos/anjor/go-carbites-commp/cmd/go-carbites-commp split-and-commp --size 1000000000 file.car
+~/repos/anjor/go-carbites-commp/cmd/go-fil-dataprep split-and-commp --size 1000000000 file.car
 ```
 
 or from stdin
 ```
-cat 5gb-filecoin-payload.bin | ~/repos/ribasushi/DAGger/bin/stream-dagger --ipfs-add-compatible-command="--cid-version=1" --emit-stdout=car-v0-pinless-stream  | ~/repos/anjor/go-carbites-commp/cmd/go-carbites-commp split-and-commp --size 1000000000
+cat 5gb-filecoin-payload.bin | anelace --ipfs-add-compatible-command="--cid-version=1" --emit-stdout=car-v0-pinless-stream  | ~/repos/anjor/go-carbites-commp/cmd/go-carbites-commp split-and-commp --size 1000000000
 ```
