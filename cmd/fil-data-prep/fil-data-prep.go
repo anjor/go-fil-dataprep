@@ -37,10 +37,11 @@ func filDataPrep(c *cli.Context) error {
 		"--emit-stderr=roots-jsonl",
 		"--emit-stdout=car-v1-stream",
 	}
-	anl := anelace.NewFromArgv(args)
 	pr, pw := io.Pipe()
 	wg := sync.WaitGroup{}
 	wg.Add(2)
+
+	anl := anelace.NewAnelaceFromArgv(args)
 
 	go func() {
 		defer wg.Done()
