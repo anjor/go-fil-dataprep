@@ -1,4 +1,4 @@
-# go-carbites-commp
+# go-fil-dataprep
 
 Chunking for [CAR files](https://ipld.io/specs/transport/car/). Split a single CAR into multiple CARs, but also calculates [commP](https://spec.filecoin.io/#section-systems.filecoin_files.piece) for the CAR files.
 
