@@ -18,14 +18,22 @@ var Cmd = &cli.Command{
 	Flags: []cli.Flag{
 		&cli.IntFlag{
 			Name:     "size",
+			Aliases:  []string{"s"},
 			Required: true,
 			Value:    2 << 20,
 			Usage:    "Target size in bytes to chunk CARs to.",
 		},
 		&cli.StringFlag{
 			Name:     "output",
+			Aliases:  []string{"o"},
 			Required: false,
-			Usage:    "optional output name for car files.",
+			Usage:    "optional output name for car files. Defaults to filename (stdin if streamed in from stdin).",
+		},
+		&cli.StringFlag{
+			Name:     "metadata",
+			Aliases:  []string{"m"},
+			Required: false,
+			Usage:    "optional metadata file name. Defaults to __metadata.csv",
 		},
 	},
 }
@@ -39,6 +47,11 @@ func filDataPrep(c *cli.Context) error {
 	output := c.String("output")
 	if output != "" {
 		name = output
+	}
+
+	meta := c.String("metadata")
+	if meta == "" {
+		meta = "__metadata.csv"
 	}
 
 	size := c.Int("size")
@@ -66,7 +79,7 @@ func filDataPrep(c *cli.Context) error {
 
 	go func() {
 		defer wg.Done()
-		err = split_and_commp.SplitAndCommp(pr, size, dir, name)
+		err = split_and_commp.SplitAndCommp(pr, size, meta, dir, name)
 		if err != nil {
 			fmt.Printf("errored in split and commp: %s", err)
 		}
