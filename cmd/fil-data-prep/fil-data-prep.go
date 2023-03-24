@@ -22,6 +22,11 @@ var Cmd = &cli.Command{
 			Value:    2 << 20,
 			Usage:    "Target size in bytes to chunk CARs to.",
 		},
+		&cli.StringFlag{
+			Name:     "output",
+			Required: false,
+			Usage:    "optional output name for car files.",
+		},
 	},
 }
 
@@ -29,6 +34,11 @@ func filDataPrep(c *cli.Context) error {
 	dir, name, fi, err := utils.GetReader(c)
 	if err != nil {
 		return err
+	}
+
+	output := c.String("output")
+	if output != "" {
+		name = output
 	}
 
 	size := c.Int("size")

@@ -30,6 +30,11 @@ var splitAndCommpFlags = []cli.Flag{
 		Value:    2 << 20,
 		Usage:    "Target size in bytes to chunk CARs to.",
 	},
+	&cli.StringFlag{
+		Name:     "output",
+		Required: false,
+		Usage:    "optional output name for car files.",
+	},
 }
 
 func splitAndCommpAction(c *cli.Context) error {
@@ -40,6 +45,11 @@ func splitAndCommpAction(c *cli.Context) error {
 	}
 
 	size := c.Int("size")
+	output := c.String("output")
+	if output != "" {
+		name = output
+	}
+
 	return SplitAndCommp(fi, size, dir, name)
 }
 
