@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/alanshaw/go-carbites v0.6.0
-	github.com/anjor/anelace v0.0.0-20230317104747-3782703159fd
+	github.com/anjor/anelace v0.0.0-20230324223643-77485990e5b1
 	github.com/filecoin-project/go-fil-commcid v0.1.0
 	github.com/filecoin-project/go-fil-commp-hashhash v0.1.0
 	github.com/urfave/cli/v2 v2.24.4
