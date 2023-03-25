@@ -26,9 +26,22 @@ var Cmd = &cli.Command{
 var splitAndCommpFlags = []cli.Flag{
 	&cli.IntFlag{
 		Name:     "size",
+		Aliases:  []string{"s"},
 		Required: true,
 		Value:    2 << 20,
 		Usage:    "Target size in bytes to chunk CARs to.",
+	},
+	&cli.StringFlag{
+		Name:     "output",
+		Aliases:  []string{"o"},
+		Required: false,
+		Usage:    "optional output name for car files. Defaults to filename (stdin if streamed in from stdin).",
+	},
+	&cli.StringFlag{
+		Name:     "metadata",
+		Aliases:  []string{"m"},
+		Required: false,
+		Usage:    "optional metadata file name. Defaults to __metadata.csv",
 	},
 }
 
@@ -40,15 +53,25 @@ func splitAndCommpAction(c *cli.Context) error {
 	}
 
 	size := c.Int("size")
-	return SplitAndCommp(fi, size, dir, name)
+	output := c.String("output")
+	if output != "" {
+		name = output
+	}
+
+	meta := c.String("metadata")
+	if meta == "" {
+		meta = "__metadata.csv"
+	}
+
+	return SplitAndCommp(fi, size, meta, dir, name)
 }
 
-func SplitAndCommp(r io.Reader, size int, dir, name string) error {
+func SplitAndCommp(r io.Reader, size int, metadata, dir, name string) error {
 	cp := new(commp.Calc)
 	r = io.TeeReader(r, cp)
 	splitter, err := carbites.NewSimpleSplitter(r, size)
 
-	f, err := os.Create("__metadata.csv")
+	f, err := os.Create(metadata)
 	defer f.Close()
 	if err != nil {
 		return err
