@@ -1,5 +1,7 @@
 module data-prep
 
+replace github.com/anjor/anelace => /Users/anjor/repos/anjor/anelace
+
 go 1.19
 
 require (
