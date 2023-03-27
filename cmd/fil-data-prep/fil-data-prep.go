@@ -50,10 +50,10 @@ func filDataPrep(c *cli.Context) error {
 	//rerr, werr := io.Pipe()
 	//rout, wout := io.Pipe()
 
-	anl, errs := anelace.NewAnelaceWithWriters(os.Stderr, os.Stdout)
-	if errs != nil {
-		return fmt.Errorf("unexpected error: %s\n", errs)
-	}
+	anl := anelace.NewAnelace()
+	//if errs != nil {
+	//	return fmt.Errorf("unexpected error: %s\n", errs)
+	//}
 
 	paths := c.Args().Slice()
 	for _, path := range paths {
@@ -72,13 +72,13 @@ func filDataPrep(c *cli.Context) error {
 				return err
 			}
 
-			r := io.MultiReader(bytes.NewReader(sizeBytes), fi)
+			io.MultiReader(bytes.NewReader(sizeBytes), fi)
 
 			//go func() {
 			//defer wg.Done()
 			//defer pw.Close()
 
-			err = anl.ProcessReader(r, nil)
+			err = anl.ProcessReader(fi, nil)
 			if err != nil {
 				fmt.Printf("process reader error: %s", err)
 			}
