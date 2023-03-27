@@ -51,7 +51,6 @@ func filDataPrep(c *cli.Context) error {
 	//rout, wout := io.Pipe()
 
 	anl, errs := anelace.NewAnelaceWithWriters(os.Stderr, os.Stdout)
-	fmt.Printf("Anelace = %s\n", anl)
 	if errs != nil {
 		return fmt.Errorf("unexpected error: %s\n", errs)
 	}
