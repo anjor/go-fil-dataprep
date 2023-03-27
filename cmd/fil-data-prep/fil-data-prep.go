@@ -56,6 +56,7 @@ func filDataPrep(c *cli.Context) error {
 	anl.SetMultipart(true)
 
 	var fileReaders []io.Reader
+	var files []string
 	paths := c.Args().Slice()
 	for _, path := range paths {
 		pathInfo, err := os.Stat(path)
@@ -70,7 +71,6 @@ func filDataPrep(c *cli.Context) error {
 			fileReaders = append(fileReaders, r)
 		} else {
 			var frs []io.Reader
-
 			err := filepath.WalkDir(path, func(p string, d fs.DirEntry, e error) error {
 				if e != nil {
 					return e
@@ -79,12 +79,12 @@ func filDataPrep(c *cli.Context) error {
 				if d.IsDir() {
 					return nil
 				}
+				files = append(files, p)
 				di, err := d.Info()
 				if err != nil {
 					return err
 				}
-				fmt.Printf("path = %s", path)
-				r, err := getFileReader(path, di)
+				r, err := getFileReader(p, di)
 				if err != nil {
 					return err
 				}
@@ -124,5 +124,6 @@ func filDataPrep(c *cli.Context) error {
 	}()
 
 	wg.Wait()
+	fmt.Printf("dirs = %s\n", files)
 	return nil
 }
