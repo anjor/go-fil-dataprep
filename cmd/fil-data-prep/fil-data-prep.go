@@ -1,13 +1,13 @@
 package fil_data_prep
 
 import (
-	"bytes"
-	"encoding/binary"
+	split_and_commp "data-prep/split-and-commp"
 	"fmt"
 	"github.com/anjor/anelace"
 	"github.com/urfave/cli/v2"
 	"io"
 	"os"
+	"sync"
 )
 
 var Cmd = &cli.Command{
@@ -40,21 +40,20 @@ var Cmd = &cli.Command{
 }
 
 func filDataPrep(c *cli.Context) error {
-	//output := c.String("output")
-	//meta := c.String("metadata")
-	//size := c.Int("size")
 	if !c.Args().Present() {
 		return fmt.Errorf("expected some data to be processed, found none.\n")
 	}
 
 	//rerr, werr := io.Pipe()
-	//rout, wout := io.Pipe()
+	rout, wout := io.Pipe()
 
-	anl, _ := anelace.NewAnelaceWithWriters(os.Stderr, os.Stdout)
-	//if errs != nil {
-	//	return fmt.Errorf("unexpected error: %s\n", errs)
-	//}
+	anl, errs := anelace.NewAnelaceWithWriters(os.Stderr, wout)
+	if errs != nil {
+		return fmt.Errorf("unexpected error: %s\n", errs)
+	}
+	anl.SetMultipart(true)
 
+	var fileReaders []io.Reader
 	paths := c.Args().Slice()
 	for _, path := range paths {
 		pathInfo, err := os.Stat(path)
@@ -62,58 +61,37 @@ func filDataPrep(c *cli.Context) error {
 			return err
 		}
 		if !pathInfo.IsDir() {
-			fileSize := pathInfo.Size()
-
-			sizeBytes := make([]byte, 8)
-			binary.BigEndian.PutUint64(sizeBytes, uint64(fileSize))
-
-			fi, err := os.Open(path)
+			r, err := getFileReader(path, pathInfo)
 			if err != nil {
 				return err
 			}
-
-			io.MultiReader(bytes.NewReader(sizeBytes), fi)
-
-			//go func() {
-			//defer wg.Done()
-			//defer pw.Close()
-
-			err = anl.ProcessReader(fi, nil)
-			if err != nil {
-				fmt.Printf("process reader error: %s", err)
-			}
-			//}()
-
-			//go func() {
-			//	defer wg.Done()
-			//	err = split_and_commp.SplitAndCommp(pr, size, meta, dir, name)
-			//	if err != nil {
-			//		fmt.Printf("errored in split and commp: %s", err)
-			//	}
-			//}()
-
+			fileReaders = append(fileReaders, r)
 		}
-
 	}
 
-	//if err := wout.Close(); err != nil {
-	//	return err
-	//}
-	//if err := werr.Close(); err != nil {
-	//	return err
-	//}
-	//
-	//stderrs, err := io.ReadAll(rerr)
-	//if err != nil {
-	//	return err
-	//}
-	//fmt.Printf("stderr = %s\n", string(stderrs))
-	//stdouts, err := io.ReadAll(rout)
-	//if err != nil {
-	//	return err
-	//}
-	//fmt.Printf("stdout = %s\n", string(stdouts))
-	//
-	//// wg.Wait()
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		defer wout.Close()
+		if err := anl.ProcessReader(io.MultiReader(fileReaders...), nil); err != nil {
+			fmt.Printf("process reader error: %s", err)
+		}
+	}()
+
+	o := c.String("output")
+	m := c.String("metadata")
+	s := c.Int("size")
+
+	go func() {
+		defer wg.Done()
+
+		if err := split_and_commp.SplitAndCommp(rout, s, m, ".", o); err != nil {
+			fmt.Printf("split and commp failed: %s", err)
+		}
+	}()
+
+	wg.Wait()
 	return nil
 }
