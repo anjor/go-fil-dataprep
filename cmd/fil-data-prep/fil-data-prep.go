@@ -6,7 +6,9 @@ import (
 	"github.com/anjor/anelace"
 	"github.com/urfave/cli/v2"
 	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"sync"
 )
 
@@ -66,6 +68,35 @@ func filDataPrep(c *cli.Context) error {
 				return err
 			}
 			fileReaders = append(fileReaders, r)
+		} else {
+			var frs []io.Reader
+
+			err := filepath.WalkDir(path, func(p string, d fs.DirEntry, e error) error {
+				if e != nil {
+					return e
+				}
+
+				if d.IsDir() {
+					return nil
+				}
+				di, err := d.Info()
+				if err != nil {
+					return err
+				}
+				fmt.Printf("path = %s", path)
+				r, err := getFileReader(path, di)
+				if err != nil {
+					return err
+				}
+				frs = append(frs, r)
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+
+			fileReaders = append(fileReaders, frs...)
+
 		}
 	}
 
