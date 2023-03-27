@@ -1,13 +1,13 @@
 package fil_data_prep
 
 import (
-	split_and_commp "data-prep/split-and-commp"
-	"data-prep/utils"
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"github.com/anjor/anelace"
 	"github.com/urfave/cli/v2"
 	"io"
-	"sync"
+	"os"
 )
 
 var Cmd = &cli.Command{
@@ -16,75 +16,105 @@ var Cmd = &cli.Command{
 	Aliases: []string{"dp"},
 	Action:  filDataPrep,
 	Flags: []cli.Flag{
-		&cli.IntFlag{
-			Name:     "size",
-			Aliases:  []string{"s"},
-			Required: true,
-			Value:    2 << 20,
-			Usage:    "Target size in bytes to chunk CARs to.",
-		},
 		&cli.StringFlag{
 			Name:     "output",
 			Aliases:  []string{"o"},
 			Required: false,
 			Usage:    "optional output name for car files. Defaults to filename (stdin if streamed in from stdin).",
 		},
+		&cli.IntFlag{
+			Name:     "size",
+			Aliases:  []string{"s"},
+			Required: false,
+			Value:    2 << 20,
+			Usage:    "Target size in bytes to chunk CARs to.",
+		},
 		&cli.StringFlag{
 			Name:     "metadata",
 			Aliases:  []string{"m"},
 			Required: false,
-			Usage:    "optional metadata file name. Defaults to __metadata.csv",
+			Value:    "__metadata.csv",
+			Usage:    "metadata file name. ",
 		},
 	},
 }
 
 func filDataPrep(c *cli.Context) error {
-	dir, name, fi, err := utils.GetReader(c)
-	if err != nil {
-		return err
+	//output := c.String("output")
+	//meta := c.String("metadata")
+	//size := c.Int("size")
+	if !c.Args().Present() {
+		return fmt.Errorf("expected some data to be processed, found none.\n")
 	}
 
-	output := c.String("output")
-	if output != "" {
-		name = output
+	//rerr, werr := io.Pipe()
+	//rout, wout := io.Pipe()
+
+	anl, errs := anelace.NewAnelaceWithWriters(os.Stderr, os.Stdout)
+	fmt.Printf("Anelace = %s\n", anl)
+	if errs != nil {
+		return fmt.Errorf("unexpected error: %s\n", errs)
 	}
 
-	meta := c.String("metadata")
-	if meta == "" {
-		meta = "__metadata.csv"
-	}
-
-	size := c.Int("size")
-	args := []string{
-		"dolphin-songs",
-		"--emit-stderr=roots-jsonl",
-		"--emit-stdout=car-v1-stream",
-	}
-	pr, pw := io.Pipe()
-	wg := sync.WaitGroup{}
-	wg.Add(2)
-
-	anl := anelace.NewAnelaceFromArgv(args)
-
-	go func() {
-		defer wg.Done()
-		defer pw.Close()
-		anl.SetCarWriter(pw)
-
-		err := anl.ProcessReader(fi, nil)
+	paths := c.Args().Slice()
+	for _, path := range paths {
+		pathInfo, err := os.Stat(path)
 		if err != nil {
-			fmt.Printf("process reader error: %s", err)
+			return err
 		}
-	}()
+		if !pathInfo.IsDir() {
+			fileSize := pathInfo.Size()
 
-	go func() {
-		defer wg.Done()
-		err = split_and_commp.SplitAndCommp(pr, size, meta, dir, name)
-		if err != nil {
-			fmt.Printf("errored in split and commp: %s", err)
+			sizeBytes := make([]byte, 8)
+			binary.BigEndian.PutUint64(sizeBytes, uint64(fileSize))
+
+			fi, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+
+			r := io.MultiReader(bytes.NewReader(sizeBytes), fi)
+
+			//go func() {
+			//defer wg.Done()
+			//defer pw.Close()
+
+			err = anl.ProcessReader(r, nil)
+			if err != nil {
+				fmt.Printf("process reader error: %s", err)
+			}
+			//}()
+
+			//go func() {
+			//	defer wg.Done()
+			//	err = split_and_commp.SplitAndCommp(pr, size, meta, dir, name)
+			//	if err != nil {
+			//		fmt.Printf("errored in split and commp: %s", err)
+			//	}
+			//}()
+
 		}
-	}()
 
-	wg.Wait()
+	}
+
+	//if err := wout.Close(); err != nil {
+	//	return err
+	//}
+	//if err := werr.Close(); err != nil {
+	//	return err
+	//}
+	//
+	//stderrs, err := io.ReadAll(rerr)
+	//if err != nil {
+	//	return err
+	//}
+	//fmt.Printf("stderr = %s\n", string(stderrs))
+	//stdouts, err := io.ReadAll(rout)
+	//if err != nil {
+	//	return err
+	//}
+	//fmt.Printf("stdout = %s\n", string(stdouts))
+	//
+	//// wg.Wait()
 	return nil
 }
