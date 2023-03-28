@@ -2,13 +2,14 @@ package fil_data_prep
 
 import (
 	split_and_commp "data-prep/split-and-commp"
+	"data-prep/utils"
+	"encoding/json"
 	"fmt"
 	"github.com/anjor/anelace"
 	"github.com/urfave/cli/v2"
 	"io"
-	"io/fs"
 	"os"
-	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -46,10 +47,10 @@ func filDataPrep(c *cli.Context) error {
 		return fmt.Errorf("expected some data to be processed, found none.\n")
 	}
 
-	//rerr, werr := io.Pipe()
+	rerr, werr := io.Pipe()
 	rout, wout := io.Pipe()
 
-	anl, errs := anelace.NewAnelaceWithWriters(os.Stderr, wout)
+	anl, errs := anelace.NewAnelaceWithWriters(werr, wout)
 	if errs != nil {
 		return fmt.Errorf("unexpected error: %s\n", errs)
 	}
@@ -68,44 +69,26 @@ func filDataPrep(c *cli.Context) error {
 			if err != nil {
 				return err
 			}
+			files = append(files, path)
 			fileReaders = append(fileReaders, r)
 		} else {
-			var frs []io.Reader
-			err := filepath.WalkDir(path, func(p string, d fs.DirEntry, e error) error {
-				if e != nil {
-					return e
-				}
-
-				if d.IsDir() {
-					return nil
-				}
-				files = append(files, p)
-				di, err := d.Info()
-				if err != nil {
-					return err
-				}
-				r, err := getFileReader(p, di)
-				if err != nil {
-					return err
-				}
-				frs = append(frs, r)
-				return nil
-			})
+			fs, frs, err := recursivelyGetFileReaders(path)
 			if err != nil {
 				return err
 			}
 
+			files = append(files, fs...)
 			fileReaders = append(fileReaders, frs...)
-
 		}
 	}
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
 		defer wout.Close()
+		defer werr.Close()
 		if err := anl.ProcessReader(io.MultiReader(fileReaders...), nil); err != nil {
 			fmt.Printf("process reader error: %s", err)
 		}
@@ -123,7 +106,63 @@ func filDataPrep(c *cli.Context) error {
 		}
 	}()
 
+	var rs []roots
+	go func() {
+		defer wg.Done()
+
+		bs, _ := io.ReadAll(rerr)
+		e := string(bs)
+		els := strings.Split(e, "\n")
+		for _, el := range els {
+			if el == "" {
+				continue
+			}
+			var r roots
+			err := json.Unmarshal([]byte(el), &r)
+			if err != nil {
+				fmt.Printf("failed to unmarshal json: %s\n", el)
+			}
+			rs = append(rs, r)
+		}
+
+	}()
+
 	wg.Wait()
-	fmt.Printf("dirs = %s\n", files)
+
+	nodes := constructTree(files, rs)
+
+	dirsCar, err := os.Create(fmt.Sprintf("%s-dirs.car", o))
+	if err != nil {
+		return err
+	}
+	_, err = io.WriteString(dirsCar, utils.NulRootCarHeader)
+	if err != nil {
+		return err
+	}
+
+	var cid, sizeVi []byte
+	for _, nd := range nodes {
+		cid = []byte(nd.Cid().String())
+		d := nd.RawData()
+
+		sizeVi = appendVarint(sizeVi[:0], uint64(len(cid))+uint64(len(d)))
+
+		if _, err := dirsCar.Write(sizeVi); err == nil {
+			fmt.Printf("sizeVi = %d\n", sizeVi)
+			if _, err := dirsCar.Write(cid); err == nil {
+				if _, err := dirsCar.Write(d); err != nil {
+					return err
+				}
+
+			}
+		}
+
+		fmt.Printf("Node cid: %s\n", cid)
+		for _, l := range nd.Links() {
+			fmt.Printf("link = %s, %s\n", l.Name, l.Cid)
+		}
+	}
+
+	dirsCar.Close()
 	return nil
 }

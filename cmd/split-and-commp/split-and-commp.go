@@ -16,6 +16,7 @@ import (
 )
 
 var Cmd = &cli.Command{
+
 	Name:    "split-and-commp",
 	Usage:   "Split CAR and calculate commp",
 	Aliases: []string{"sac"},
@@ -28,8 +29,8 @@ var splitAndCommpFlags = []cli.Flag{
 		Name:     "size",
 		Aliases:  []string{"s"},
 		Required: true,
-		Value:    2 << 20,
-		Usage:    "Target size in bytes to chunk CARs to.",
+
+		Usage: "Target size in bytes to chunk CARs to.",
 	},
 	&cli.StringFlag{
 		Name:     "output",
