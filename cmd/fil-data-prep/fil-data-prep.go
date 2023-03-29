@@ -87,7 +87,6 @@ func filDataPrep(c *cli.Context) error {
 
 	go func() {
 		defer wg.Done()
-		defer wout.Close()
 		defer werr.Close()
 		if err := anl.ProcessReader(io.MultiReader(fileReaders...), nil); err != nil {
 			fmt.Printf("process reader error: %s", err)
@@ -127,15 +126,9 @@ func filDataPrep(c *cli.Context) error {
 
 	}()
 
-	wg.Wait()
-
 	nodes := constructTree(files, rs)
 
-	dirsCar, err := os.Create(fmt.Sprintf("%s-dirs.car", o))
-	if err != nil {
-		return err
-	}
-	_, err = io.WriteString(dirsCar, utils.NulRootCarHeader)
+	_, err := io.WriteString(wout, utils.NulRootCarHeader)
 	if err != nil {
 		return err
 	}
@@ -147,9 +140,9 @@ func filDataPrep(c *cli.Context) error {
 
 		sizeVi = appendVarint(sizeVi[:0], uint64(len(cid))+uint64(len(d)))
 
-		if _, err := dirsCar.Write(sizeVi); err == nil {
+		if _, err := wout.Write(sizeVi); err == nil {
 			fmt.Printf("sizeVi = %d\n", sizeVi)
-			if _, err := dirsCar.Write(cid); err == nil {
+			if _, err := wout.Write(cid); err == nil {
 				if _, err := dirsCar.Write(d); err != nil {
 					return err
 				}
@@ -163,6 +156,9 @@ func filDataPrep(c *cli.Context) error {
 		}
 	}
 
-	dirsCar.Close()
+	wout.Close()
+
+	wg.Wait()
+
 	return nil
 }
