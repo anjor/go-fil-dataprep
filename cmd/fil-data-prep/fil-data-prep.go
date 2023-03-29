@@ -96,18 +96,12 @@ func filDataPrep(c *cli.Context) error {
 			sizeVi = appendVarint(sizeVi[:0], uint64(len(cid))+uint64(len(d)))
 
 			if _, err := wout.Write(sizeVi); err == nil {
-				fmt.Printf("sizeVi = %d\n", sizeVi)
 				if _, err := wout.Write(cid); err == nil {
 					if _, err := wout.Write(d); err != nil {
 						fmt.Printf("failed to write car: %s\n", err)
 					}
 
 				}
-			}
-
-			fmt.Printf("Node cid: %s\n", nd.Cid())
-			for _, l := range nd.Links() {
-				fmt.Printf("link = %s, %s\n", l.Name, l.Cid)
 			}
 
 		}
