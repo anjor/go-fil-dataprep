@@ -57,7 +57,6 @@ func SplitAndCommp(r io.Reader, targetSize int, output string) ([]CarFile, error
 	var i int
 	for {
 		f := fmt.Sprintf("%s-%d.car", output, i)
-		fmt.Printf("Writing file: %s\n", f)
 		fi, err := os.Create(f)
 		if err != nil {
 			return carFiles, fmt.Errorf("failed to create file: %s\n", err)

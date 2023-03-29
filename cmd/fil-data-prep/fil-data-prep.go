@@ -132,7 +132,6 @@ func filDataPrep(c *cli.Context) error {
 		}
 		defer w.Flush()
 		for _, c := range carFiles {
-			fmt.Printf("c: %s", c.CarName)
 			err = w.Write([]string{
 				time.Now().String(),
 				o,
@@ -146,10 +145,6 @@ func filDataPrep(c *cli.Context) error {
 	}()
 
 	wg.Wait()
-
-	for _, r := range rs {
-		fmt.Printf("root = %d, %s\n", r.Stream, r.Cid)
-	}
 
 	fmt.Printf("root cid = %s\n", rcid)
 
