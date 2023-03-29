@@ -117,10 +117,6 @@ func filDataPrep(c *cli.Context) error {
 			fmt.Printf("split and commp failed : %s\n", err)
 			return
 		}
-		//if err := split_and_commp.SplitAndCommp(rout, s, m, ".", o); err != nil {
-		//	fmt.Printf("split and commp failed: %s\n", err)
-		//	return
-		//}
 
 		f, err := os.Create(m)
 		defer f.Close()
