@@ -1,14 +1,20 @@
 package fil_data_prep
 
 import (
-	split_and_commp "data-prep/split-and-commp"
+	"data-prep/utils"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"github.com/anjor/anelace"
+	"github.com/ipfs/go-cid"
+	"github.com/ipfs/go-merkledag"
 	"github.com/urfave/cli/v2"
 	"io"
+	"os"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 var Cmd = &cli.Command{
@@ -45,18 +51,10 @@ func filDataPrep(c *cli.Context) error {
 		return fmt.Errorf("expected some data to be processed, found none.\n")
 	}
 
-	rerr, werr := io.Pipe()
-	rout, wout := io.Pipe()
-
-	anl, errs := anelace.NewAnelaceWithWriters(werr, wout)
-	if errs != nil {
-		return fmt.Errorf("unexpected error: %s\n", errs)
-	}
-	anl.SetMultipart(true)
-
 	var fileReaders []io.Reader
 	var files []string
 	paths := c.Args().Slice()
+
 	for _, path := range paths {
 		fs, frs, err := getAllFileReadersFromPath(path)
 		if err != nil {
@@ -70,6 +68,15 @@ func filDataPrep(c *cli.Context) error {
 	wg := sync.WaitGroup{}
 	wg.Add(3)
 
+	rerr, werr := io.Pipe()
+	rout, wout := io.Pipe()
+
+	anl, errs := anelace.NewAnelaceWithWriters(werr, wout)
+	if errs != nil {
+		return fmt.Errorf("unexpected error: %s\n", errs)
+	}
+	anl.SetMultipart(true)
+
 	go func() {
 		defer wg.Done()
 		defer werr.Close()
@@ -79,6 +86,7 @@ func filDataPrep(c *cli.Context) error {
 	}()
 
 	var rs []roots
+	var rcid cid.Cid
 	go func() {
 		defer wg.Done()
 		defer wout.Close()
@@ -86,24 +94,14 @@ func filDataPrep(c *cli.Context) error {
 		rs = getRoots(rerr)
 
 		tr := constructTree(files, rs)
-		nodes := getDirectoryNodes(tr)[1:]
+		nodes := getDirectoryNodes(tr)
 
-		var cid, sizeVi []byte
-		for _, nd := range nodes {
-			cid = []byte(nd.Cid().KeyString())
-			d := nd.RawData()
-
-			sizeVi = appendVarint(sizeVi[:0], uint64(len(cid))+uint64(len(d)))
-
-			if _, err := wout.Write(sizeVi); err == nil {
-				if _, err := wout.Write(cid); err == nil {
-					if _, err := wout.Write(d); err != nil {
-						fmt.Printf("failed to write car: %s\n", err)
-					}
-
-				}
-			}
-
+		if len(paths) > 1 {
+			rcid = nodes[0].Cid() // use fake root directory if multiple args
+			writeNode(nodes, wout)
+		} else {
+			rcid = nodes[1].Cid() // otherwise use the first node (which should work)  todo: check this
+			writeNode(nodes[1:], wout)
 		}
 	}()
 
@@ -114,14 +112,72 @@ func filDataPrep(c *cli.Context) error {
 	go func() {
 		defer wg.Done()
 
-		if err := split_and_commp.SplitAndCommp(rout, s, m, ".", o); err != nil {
-			fmt.Printf("split and commp failed: %s", err)
+		carFiles, err := utils.SplitAndCommp(rout, s, o)
+		if err != nil {
+			fmt.Printf("split and commp failed : %s\n", err)
+			return
+		}
+		//if err := split_and_commp.SplitAndCommp(rout, s, m, ".", o); err != nil {
+		//	fmt.Printf("split and commp failed: %s\n", err)
+		//	return
+		//}
+
+		f, err := os.Create(m)
+		defer f.Close()
+		if err != nil {
+			fmt.Printf("creating metadata file failed: %s\n", m)
+			return
+		}
+		w := csv.NewWriter(f)
+		err = w.Write([]string{"timestamp", "original data", "car file", "root_cid", "piece cid", "padded piece size", "unpadded piece size"})
+		if err != nil {
+			fmt.Printf("failed to write csv header\n")
+			return
+		}
+		defer w.Flush()
+		for _, c := range carFiles {
+			fmt.Printf("c: %s", c.CarName)
+			err = w.Write([]string{
+				time.Now().String(),
+				o,
+				rcid.String(),
+				c.CarName,
+				c.CommP.String(),
+				strconv.FormatUint(c.PaddedSize, 10),
+				strconv.FormatUint(c.PaddedSize/128*127, 10),
+			})
 		}
 	}()
 
 	wg.Wait()
 
+	for _, r := range rs {
+		fmt.Printf("root = %d, %s\n", r.Stream, r.Cid)
+	}
+
+	fmt.Printf("root cid = %s\n", rcid)
+
 	return nil
+}
+
+func writeNode(nodes []*merkledag.ProtoNode, wout *io.PipeWriter) {
+	var cid, sizeVi []byte
+	for _, nd := range nodes {
+		cid = []byte(nd.Cid().KeyString())
+		d := nd.RawData()
+
+		sizeVi = appendVarint(sizeVi[:0], uint64(len(cid))+uint64(len(d)))
+
+		if _, err := wout.Write(sizeVi); err == nil {
+			if _, err := wout.Write(cid); err == nil {
+				if _, err := wout.Write(d); err != nil {
+					fmt.Printf("failed to write car: %s\n", err)
+				}
+
+			}
+		}
+
+	}
 }
 
 func getRoots(rerr *io.PipeReader) []roots {
