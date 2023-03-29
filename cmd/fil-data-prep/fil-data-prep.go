@@ -142,7 +142,7 @@ func filDataPrep(c *cli.Context) error {
 
 	var cid, sizeVi []byte
 	for _, nd := range nodes {
-		cid = []byte(nd.Cid().String())
+		cid = []byte(nd.Cid().KeyString())
 		d := nd.RawData()
 
 		sizeVi = appendVarint(sizeVi[:0], uint64(len(cid))+uint64(len(d)))
@@ -157,7 +157,7 @@ func filDataPrep(c *cli.Context) error {
 			}
 		}
 
-		fmt.Printf("Node cid: %s\n", cid)
+		fmt.Printf("Node cid: %s\n", nd.Cid())
 		for _, l := range nd.Links() {
 			fmt.Printf("link = %s, %s\n", l.Name, l.Cid)
 		}

@@ -146,7 +146,7 @@ func constructTree(paths []string, rs []roots) []*merkledag.ProtoNode {
 
 	root.constructNode()
 
-	return getDirectoryNodes(root)
+	return getDirectoryNodes(root)[1:]
 }
 
 func getDirectoryNodes(node *node) []*merkledag.ProtoNode {
