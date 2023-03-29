@@ -1,19 +1,12 @@
 package fil_data_prep
 
 import (
-	"bytes"
-	"encoding/binary"
-	"fmt"
 	"github.com/ipfs/go-cid"
 	format "github.com/ipfs/go-ipld-format"
 	"github.com/ipfs/go-merkledag"
 	"github.com/ipfs/go-unixfs"
 	unixfspb "github.com/ipfs/go-unixfs/pb"
 	"github.com/multiformats/go-multihash"
-	"io"
-	"io/fs"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -23,52 +16,6 @@ type roots struct {
 	Stream   int    `json:"stream"`
 	Cid      string `json:"cid"`
 	Wiresize int    `json:"wiresize"`
-}
-
-func getFileReader(path string, pathInfo os.FileInfo) (io.Reader, error) {
-	if pathInfo.IsDir() {
-		return nil, fmt.Errorf("expect file got directory: %s", path)
-	}
-	fileSize := pathInfo.Size()
-
-	sizeBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(sizeBytes, uint64(fileSize))
-
-	fi, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	return io.MultiReader(bytes.NewReader(sizeBytes), fi), nil
-}
-
-func recursivelyGetFileReaders(path string) (files []string, frs []io.Reader, err error) {
-	err = filepath.WalkDir(path, func(p string, d fs.DirEntry, e error) error {
-		if e != nil {
-			return e
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		files = append(files, p)
-		di, err := d.Info()
-		if err != nil {
-			return err
-		}
-		r, err := getFileReader(p, di)
-		if err != nil {
-			return err
-		}
-		frs = append(frs, r)
-		return nil
-	})
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return
 }
 
 type node struct {
@@ -88,10 +35,6 @@ func (n *node) addChild(child *node) {
 
 func (n *node) setCid(c cid.Cid) {
 	n.cid = c
-}
-
-func (n *node) getCid() cid.Cid {
-	return n.cid
 }
 
 func (n *node) constructNode() {
@@ -120,7 +63,7 @@ func (n *node) constructNode() {
 	n.cid = nd.Cid()
 }
 
-func constructTree(paths []string, rs []roots) []*merkledag.ProtoNode {
+func constructTree(paths []string, rs []roots) *node {
 	root := newNode("root")
 
 	for i, path := range paths {
@@ -144,12 +87,12 @@ func constructTree(paths []string, rs []roots) []*merkledag.ProtoNode {
 			currentNode = foundChild
 		}
 
-		currentNode.setCid(cid.MustParse(rs[i].Cid)) // or any other value you want to associate with the leaf nodes
+		currentNode.cid = cid.MustParse(rs[i].Cid)
 	}
 
 	root.constructNode()
 
-	return getDirectoryNodes(root)[1:]
+	return root
 }
 
 func getDirectoryNodes(node *node) []*merkledag.ProtoNode {
@@ -162,6 +105,7 @@ func getDirectoryNodes(node *node) []*merkledag.ProtoNode {
 	}
 	return nodes
 }
+
 func appendVarint(tgt []byte, v uint64) []byte {
 	for v > 127 {
 		tgt = append(tgt, byte(v|128))

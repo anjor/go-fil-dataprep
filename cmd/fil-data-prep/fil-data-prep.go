@@ -2,13 +2,11 @@ package fil_data_prep
 
 import (
 	split_and_commp "data-prep/split-and-commp"
-	"data-prep/utils"
 	"encoding/json"
 	"fmt"
 	"github.com/anjor/anelace"
 	"github.com/urfave/cli/v2"
 	"io"
-	"os"
 	"strings"
 	"sync"
 )
@@ -60,26 +58,13 @@ func filDataPrep(c *cli.Context) error {
 	var files []string
 	paths := c.Args().Slice()
 	for _, path := range paths {
-		pathInfo, err := os.Stat(path)
+		fs, frs, err := getAllFileReadersFromPath(path)
 		if err != nil {
 			return err
 		}
-		if !pathInfo.IsDir() {
-			r, err := getFileReader(path, pathInfo)
-			if err != nil {
-				return err
-			}
-			files = append(files, path)
-			fileReaders = append(fileReaders, r)
-		} else {
-			fs, frs, err := recursivelyGetFileReaders(path)
-			if err != nil {
-				return err
-			}
 
-			files = append(files, fs...)
-			fileReaders = append(fileReaders, frs...)
-		}
+		files = append(files, fs...)
+		fileReaders = append(fileReaders, frs...)
 	}
 
 	wg := sync.WaitGroup{}
@@ -87,10 +72,44 @@ func filDataPrep(c *cli.Context) error {
 
 	go func() {
 		defer wg.Done()
-		defer wout.Close()
 		defer werr.Close()
 		if err := anl.ProcessReader(io.MultiReader(fileReaders...), nil); err != nil {
 			fmt.Printf("process reader error: %s", err)
+		}
+	}()
+
+	var rs []roots
+	go func() {
+		defer wg.Done()
+		defer wout.Close()
+
+		rs = getRoots(rerr)
+
+		tr := constructTree(files, rs)
+		nodes := getDirectoryNodes(tr)[1:]
+
+		var cid, sizeVi []byte
+		for _, nd := range nodes {
+			cid = []byte(nd.Cid().KeyString())
+			d := nd.RawData()
+
+			sizeVi = appendVarint(sizeVi[:0], uint64(len(cid))+uint64(len(d)))
+
+			if _, err := wout.Write(sizeVi); err == nil {
+				fmt.Printf("sizeVi = %d\n", sizeVi)
+				if _, err := wout.Write(cid); err == nil {
+					if _, err := wout.Write(d); err != nil {
+						fmt.Printf("failed to write car: %s\n", err)
+					}
+
+				}
+			}
+
+			fmt.Printf("Node cid: %s\n", nd.Cid())
+			for _, l := range nd.Links() {
+				fmt.Printf("link = %s, %s\n", l.Name, l.Cid)
+			}
+
 		}
 	}()
 
@@ -106,64 +125,27 @@ func filDataPrep(c *cli.Context) error {
 		}
 	}()
 
-	var rs []roots
-	go func() {
-		defer wg.Done()
-
-		bs, _ := io.ReadAll(rerr)
-		e := string(bs)
-		els := strings.Split(e, "\n")
-		for _, el := range els {
-			if el == "" {
-				continue
-			}
-			var r roots
-			err := json.Unmarshal([]byte(el), &r)
-			if err != nil {
-				fmt.Printf("failed to unmarshal json: %s\n", el)
-			}
-			rs = append(rs, r)
-		}
-
-	}()
-
 	wg.Wait()
 
-	nodes := constructTree(files, rs)
-
-	dirsCar, err := os.Create(fmt.Sprintf("%s-dirs.car", o))
-	if err != nil {
-		return err
-	}
-	_, err = io.WriteString(dirsCar, utils.NulRootCarHeader)
-	if err != nil {
-		return err
-	}
-
-	var cid, sizeVi []byte
-	for _, nd := range nodes {
-		cid = []byte(nd.Cid().KeyString())
-		d := nd.RawData()
-
-		sizeVi = appendVarint(sizeVi[:0], uint64(len(cid))+uint64(len(d)))
-
-		if _, err := dirsCar.Write(sizeVi); err == nil {
-			fmt.Printf("sizeVi = %d\n", sizeVi)
-			if _, err := dirsCar.Write(cid); err == nil {
-				if _, err := dirsCar.Write(d); err != nil {
-					return err
-				}
-
-			}
-		}
-
-		fmt.Printf("Node cid: %s\n", nd.Cid())
-		for _, l := range nd.Links() {
-			fmt.Printf("link = %s, %s\n", l.Name, l.Cid)
-		}
-
-	}
-
-	dirsCar.Close()
 	return nil
+}
+
+func getRoots(rerr *io.PipeReader) []roots {
+
+	var rs []roots
+	bs, _ := io.ReadAll(rerr)
+	e := string(bs)
+	els := strings.Split(e, "\n")
+	for _, el := range els {
+		if el == "" {
+			continue
+		}
+		var r roots
+		err := json.Unmarshal([]byte(el), &r)
+		if err != nil {
+			fmt.Printf("failed to unmarshal json: %s\n", el)
+		}
+		rs = append(rs, r)
+	}
+	return rs
 }
