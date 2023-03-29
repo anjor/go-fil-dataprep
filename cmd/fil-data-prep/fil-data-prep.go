@@ -161,6 +161,7 @@ func filDataPrep(c *cli.Context) error {
 		for _, l := range nd.Links() {
 			fmt.Printf("link = %s, %s\n", l.Name, l.Cid)
 		}
+
 	}
 
 	dirsCar.Close()

@@ -99,7 +99,11 @@ func (n *node) constructNode() {
 		return
 	}
 
-	nd := merkledag.NodeWithData(unixfs.NewFSNode(unixfspb.Data_Directory).Data())
+	ndbs, err := unixfs.NewFSNode(unixfspb.Data_Directory).GetBytes()
+	if err != nil {
+		return
+	}
+	nd := merkledag.NodeWithData(ndbs)
 	nd.SetCidBuilder(cid.V1Builder{Codec: cid.DagCBOR, MhType: multihash.SHA2_256})
 
 	for _, child := range n.children {
@@ -112,7 +116,6 @@ func (n *node) constructNode() {
 		}
 
 	}
-
 	n.pbn = nd
 	n.cid = nd.Cid()
 }
