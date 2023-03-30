@@ -78,4 +78,5 @@ func splitAndCommpAction(c *cli.Context) error {
 			strconv.FormatUint(c.PaddedSize/128*127, 10),
 		})
 	}
+	return nil
 }
