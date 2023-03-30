@@ -70,7 +70,7 @@ func splitAndCommpAction(c *cli.Context) error {
 	defer w.Flush()
 	for _, c := range carFiles {
 		err = w.Write([]string{
-			time.Now().UTC().Round(0).String(),
+			time.Now().Format(time.RFC3339),
 			output,
 			c.CarName,
 			c.CommP.String(),

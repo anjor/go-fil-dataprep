@@ -133,7 +133,7 @@ func filDataPrep(c *cli.Context) error {
 		defer w.Flush()
 		for _, c := range carFiles {
 			err = w.Write([]string{
-				time.Now().UTC().Round(0).String(),
+				time.Now().UTC().Format(time.RFC3339),
 				o,
 				rcid.String(),
 				c.CarName,
