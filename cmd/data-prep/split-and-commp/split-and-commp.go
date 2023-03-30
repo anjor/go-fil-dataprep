@@ -63,7 +63,7 @@ func splitAndCommpAction(c *cli.Context) error {
 	}
 
 	w := csv.NewWriter(f)
-	err = w.Write([]string{"timestamp", "original data", "car file", "piece cid", "padded piece size", "unpadded piece size"})
+	err = w.Write([]string{"timestamp", "original data", "car file", "piece cid", "padded piece size"})
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,6 @@ func splitAndCommpAction(c *cli.Context) error {
 			c.CarName,
 			c.CommP.String(),
 			strconv.FormatUint(c.PaddedSize, 10),
-			strconv.FormatUint(c.PaddedSize/128*127, 10),
 		})
 	}
 	return nil
