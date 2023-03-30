@@ -5,7 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"github.com/alanshaw/go-carbites"
-	"github.com/anjor/go-fil-dataprep/cmd/utils"
+	"github.com/anjor/go-fil-dataprep/cmd/data-prep/utils"
 	commcid "github.com/filecoin-project/go-fil-commcid"
 	commp "github.com/filecoin-project/go-fil-commp-hashhash"
 	"github.com/urfave/cli/v2"

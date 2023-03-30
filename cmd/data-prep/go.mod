@@ -4,12 +4,14 @@ go 1.19
 
 require (
 	github.com/alanshaw/go-carbites v0.6.0
-	github.com/anjor/anelace v0.0.0-20230324223643-77485990e5b1
+	github.com/anjor/anelace v0.0.0-20230330084912-e7a70b075964
 	github.com/filecoin-project/go-fil-commcid v0.1.0
 	github.com/filecoin-project/go-fil-commp-hashhash v0.1.0
 	github.com/ipfs/go-cid v0.3.2
+	github.com/ipfs/go-ipld-format v0.2.0
 	github.com/ipfs/go-merkledag v0.5.1
 	github.com/ipfs/go-unixfs v0.4.5
+	github.com/multiformats/go-multihash v0.2.1
 	github.com/urfave/cli/v2 v2.24.4
 )
 
@@ -28,7 +30,6 @@ require (
 	github.com/ipfs/go-ipfs-exchange-interface v0.1.0 // indirect
 	github.com/ipfs/go-ipfs-util v0.0.2 // indirect
 	github.com/ipfs/go-ipld-cbor v0.0.6 // indirect
-	github.com/ipfs/go-ipld-format v0.2.0 // indirect
 	github.com/ipfs/go-ipld-legacy v0.1.0 // indirect
 	github.com/ipfs/go-log v1.0.5 // indirect
 	github.com/ipfs/go-log/v2 v2.5.1 // indirect
@@ -49,7 +50,6 @@ require (
 	github.com/multiformats/go-base36 v0.1.1-0.20200523231606-044b32d632cf // indirect
 	github.com/multiformats/go-multibase v0.1.1 // indirect
 	github.com/multiformats/go-multicodec v0.3.1-0.20210902112759-1539a079fd61 // indirect
-	github.com/multiformats/go-multihash v0.2.1 // indirect
 	github.com/multiformats/go-varint v0.0.6 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pborman/getopt v0.0.0-20190409184431-ee0cd42419d3 // indirect
