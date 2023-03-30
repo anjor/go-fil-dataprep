@@ -125,7 +125,7 @@ func filDataPrep(c *cli.Context) error {
 			return
 		}
 		w := csv.NewWriter(f)
-		err = w.Write([]string{"timestamp", "original data", "car file", "root_cid", "piece cid", "padded piece size", "unpadded piece size"})
+		err = w.Write([]string{"timestamp", "original data", "car file", "root_cid", "piece cid", "padded piece size"})
 		if err != nil {
 			fmt.Printf("failed to write csv header\n")
 			return
@@ -139,7 +139,6 @@ func filDataPrep(c *cli.Context) error {
 				c.CarName,
 				c.CommP.String(),
 				strconv.FormatUint(c.PaddedSize, 10),
-				strconv.FormatUint(c.PaddedSize/128*127, 10),
 			})
 		}
 	}()
