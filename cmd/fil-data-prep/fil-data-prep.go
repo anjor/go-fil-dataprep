@@ -1,11 +1,11 @@
 package fil_data_prep
 
 import (
-	"data-prep/utils"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"github.com/anjor/anelace"
+	"github.com/anjor/go-fil-dataprep/cmd/data-prep/utils"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-merkledag"
 	"github.com/urfave/cli/v2"

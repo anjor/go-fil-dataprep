@@ -1,4 +1,4 @@
-module data-prep
+module github.com/anjor/go-fil-dataprep/cmd/data-prep
 
 replace github.com/anjor/anelace => /Users/anjor/repos/anjor/anelace
 
