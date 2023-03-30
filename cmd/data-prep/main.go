@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/anjor/go-fil-dataprep/cmd/fil-data-prep"
-	"github.com/anjor/go-fil-dataprep/cmd/split-and-commp"
+	"github.com/anjor/go-fil-dataprep/cmd/data-prep/fil-data-prep"
+	"github.com/anjor/go-fil-dataprep/cmd/data-prep/split-and-commp"
 	"github.com/urfave/cli/v2"
 	"os"
 )
