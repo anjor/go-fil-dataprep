@@ -15,7 +15,7 @@ type roots struct {
 	Payload  int    `json:"payload"`
 	Stream   int    `json:"stream"`
 	Cid      string `json:"cid"`
-	Wiresize int    `json:"wiresize"`
+	Wiresize uint64 `json:"wiresize"`
 }
 
 type node struct {
@@ -23,6 +23,7 @@ type node struct {
 	children []*node
 	cid      cid.Cid
 	pbn      *merkledag.ProtoNode
+	size     uint64
 }
 
 func newNode(name string) *node {
@@ -31,10 +32,6 @@ func newNode(name string) *node {
 
 func (n *node) addChild(child *node) {
 	n.children = append(n.children, child)
-}
-
-func (n *node) setCid(c cid.Cid) {
-	n.cid = c
 }
 
 func (n *node) constructNode() {
@@ -49,18 +46,22 @@ func (n *node) constructNode() {
 	nd := merkledag.NodeWithData(ndbs)
 	nd.SetCidBuilder(cid.V1Builder{Codec: cid.DagCBOR, MhType: multihash.SHA2_256})
 
+	var size uint64
 	for _, child := range n.children {
 		child.constructNode()
 		err := nd.AddRawLink(child.name, &format.Link{
-			Cid: child.cid,
+			Cid:  child.cid,
+			Size: child.size,
 		})
 		if err != nil {
 			return
 		}
+		size += child.size
 
 	}
 	n.pbn = nd
 	n.cid = nd.Cid()
+	n.size = size
 }
 
 func constructTree(paths []string, rs []roots) *node {
@@ -88,6 +89,7 @@ func constructTree(paths []string, rs []roots) *node {
 		}
 
 		currentNode.cid = cid.MustParse(rs[i].Cid)
+		currentNode.size = rs[i].Wiresize
 	}
 
 	root.constructNode()
