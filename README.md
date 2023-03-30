@@ -1,18 +1,29 @@
 # go-fil-dataprep
 
-Chunking for [CAR files](https://ipld.io/specs/transport/car/). Split a single CAR into multiple CARs, but also calculates [commP](https://spec.filecoin.io/#section-systems.filecoin_files.piece) for the CAR files.
+And end to end data preparation tool to onboard data to filecoin. 
 
-Inspired by [go-carbites](https://github.com/alanshaw/go-carbites).
+## Installation
+
+```
+go install github.com/anjor/go-fil-dataprep/cmd/data-prep@latest
+```
 
 ## Usage
 
-The CLI takes a car file, either as an argument
+The cli supports 2 commands -- `fil-data-prep` and `split-and-commp`.
+
+### fil-data-prep
+
+This command transforms data into a bunch of car files sized "correctly" (target size provided as an input), calculates commP and saves all of this data in a metadata file.
 
 ```
-~/repos/anjor/go-carbites-commp/cmd/go-fil-dataprep split-and-commp --size 1000000000 file.car
+data-prep dp --size 1000000 --output a --metadata test_meta.csv subdir2
+root cid = bafybeig3mkjrgyde33grqwyano74pq2x5vcdj4twii5khotua4k4kedpha
 ```
 
-or from stdin
 ```
-cat 5gb-filecoin-payload.bin | anelace --ipfs-add-compatible-command="--cid-version=1" --emit-stdout=car-v0-pinless-stream  | ~/repos/anjor/go-carbites-commp/cmd/go-carbites-commp split-and-commp --size 1000000000
+cat test_meta.csv
+timestamp,original data,car file,root_cid,piece cid,padded piece size,unpadded piece size
+2023-03-30 14:07:44.228804 +0100 BST m=+0.005866668,a,bafybeig3mkjrgyde33grqwyano74pq2x5vcdj4twii5khotua4k4kedpha,a-0.car,baga6ea4seaqcjzz5iztdwawdakw3yel3nkhppyhsxidc3fhkpgq462iednah6na,1024,1016
+anjor@seven data (main)*$
 ```
