@@ -23,8 +23,8 @@ root cid = bafybeig3mkjrgyde33grqwyano74pq2x5vcdj4twii5khotua4k4kedpha
 
 ```
 $cat test_meta.csv
-timestamp,original data,car file,root_cid,piece cid,padded piece size,unpadded piece size
-2023-03-30T20:15:09Z,out,bafybeig3mkjrgyde33grqwyano74pq2x5vcdj4twii5khotua4k4kedpha,out-0.car,baga6ea4seaqcjzz5iztdwawdakw3yel3nkhppyhsxidc3fhkpgq462iednah6na,1024,1016
+timestamp,original data,car file,root_cid,piece cid,padded piece size
+2023-03-31T12:52:01Z,out,bafybeig3mkjrgyde33grqwyano74pq2x5vcdj4twii5khotua4k4kedpha,out-0.car,baga6ea4seaqcjzz5iztdwawdakw3yel3nkhppyhsxidc3fhkpgq462iednah6na,1024
 ```
 ### split-and-commp
 
