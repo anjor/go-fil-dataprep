@@ -135,8 +135,8 @@ func filDataPrep(c *cli.Context) error {
 			err = w.Write([]string{
 				time.Now().UTC().Format(time.RFC3339),
 				o,
-				rcid.String(),
 				c.CarName,
+				rcid.String(),
 				c.CommP.String(),
 				strconv.FormatUint(c.PaddedSize, 10),
 			})
