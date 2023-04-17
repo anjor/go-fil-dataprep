@@ -138,6 +138,11 @@ func SplitAndCommp(r io.Reader, targetSize int, output string) ([]CarFile, error
 			return carFiles, err
 		}
 
+		err = resetCP(cp)
+		if err != nil {
+			return carFiles, err
+		}
+
 		commCid, err := commcid.DataCommitmentV1ToCID(rawCommP)
 		if err != nil {
 			return carFiles, err
@@ -181,4 +186,12 @@ func discardHeader(streamBuf *bufio.Reader, streamLen int64) (int64, error) {
 	streamLen += actualHdrLen
 
 	return streamLen, nil
+}
+
+func resetCP(cp *commp.Calc) error {
+	cp.Reset()
+	_, err := cp.Write([]byte(nulRootCarHeader))
+	if err != nil {
+		return err
+	}
 }
