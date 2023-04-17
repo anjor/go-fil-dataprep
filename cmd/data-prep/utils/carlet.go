@@ -56,8 +56,8 @@ func SplitAndCommp(r io.Reader, targetSize int, output string) ([]CarFile, error
 
 	var i int
 	for {
-		f := fmt.Sprintf("%s-%d.car", output, i)
-		fi, err := os.Create(f)
+		fname := fmt.Sprintf("%s-%d.car", output, i)
+		fi, err := os.Create(fname)
 		if err != nil {
 			return carFiles, fmt.Errorf("failed to create file: %s\n", err)
 		}
@@ -69,23 +69,12 @@ func SplitAndCommp(r io.Reader, targetSize int, output string) ([]CarFile, error
 		for carletLen < int64(targetSize) {
 			maybeNextFrameLen, err := streamBuf.Peek(varintSize)
 			if err == io.EOF {
-				rawCommP, paddedSize, err := cp.Digest()
+				carFile, err := cleanup(cp, output, i, fi)
 				if err != nil {
 					return carFiles, err
 				}
+				carFiles = append(carFiles, carFile)
 
-				commCid, err := commcid.DataCommitmentV1ToCID(rawCommP)
-				if err != nil {
-					return carFiles, err
-				}
-
-				carFiles = append(carFiles,
-					CarFile{
-						Name:       output,
-						CarName:    f,
-						CommP:      commCid,
-						PaddedSize: paddedSize,
-					})
 				return carFiles, nil
 			}
 			if err != nil && err != bufio.ErrBufferFull {
@@ -112,51 +101,26 @@ func SplitAndCommp(r io.Reader, targetSize int, output string) ([]CarFile, error
 				if err != io.EOF {
 					return carFiles, fmt.Errorf("unexpected error at offset %d: %s", streamLen-actualFrameLen, err)
 				}
-				rawCommP, paddedSize, err := cp.Digest()
+				carFile, err := cleanup(cp, output, i, fi)
 				if err != nil {
 					return carFiles, err
 				}
+				carFiles = append(carFiles, carFile)
 
-				commCid, err := commcid.DataCommitmentV1ToCID(rawCommP)
-				if err != nil {
-					return carFiles, err
-				}
-
-				carFiles = append(carFiles,
-					CarFile{
-						Name:       output,
-						CarName:    f,
-						CommP:      commCid,
-						PaddedSize: paddedSize,
-					})
 				return carFiles, nil
 			}
 		}
 
-		rawCommP, paddedSize, err := cp.Digest()
+		carFile, err := cleanup(cp, output, i, fi)
 		if err != nil {
 			return carFiles, err
 		}
+		carFiles = append(carFiles, carFile)
 
 		err = resetCP(cp)
 		if err != nil {
 			return carFiles, err
 		}
-
-		commCid, err := commcid.DataCommitmentV1ToCID(rawCommP)
-		if err != nil {
-			return carFiles, err
-		}
-
-		carFiles = append(carFiles,
-			CarFile{
-				Name:       output,
-				CarName:    f,
-				CommP:      commCid,
-				PaddedSize: paddedSize,
-			})
-
-		fi.Close()
 		i++
 	}
 }
@@ -191,7 +155,33 @@ func discardHeader(streamBuf *bufio.Reader, streamLen int64) (int64, error) {
 func resetCP(cp *commp.Calc) error {
 	cp.Reset()
 	_, err := cp.Write([]byte(nulRootCarHeader))
+
+	return err
+}
+
+func cleanup(cp *commp.Calc, output string, i int, f *os.File) (CarFile, error) {
+	rawCommP, paddedSize, err := cp.Digest()
 	if err != nil {
-		return err
+		return CarFile{}, err
 	}
+
+	commCid, err := commcid.DataCommitmentV1ToCID(rawCommP)
+	if err != nil {
+		return CarFile{}, err
+	}
+
+	f.Close()
+	oldn := fmt.Sprintf("%s-%d.car", output, i)
+	newn := fmt.Sprintf("%s-%s-%d.car", output, commCid, i)
+	err = os.Rename(oldn, newn)
+	if err != nil {
+		return CarFile{}, err
+	}
+
+	return CarFile{
+		Name:       output,
+		CarName:    newn,
+		CommP:      commCid,
+		PaddedSize: paddedSize,
+	}, nil
 }
