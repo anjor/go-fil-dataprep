@@ -96,11 +96,11 @@ func filDataPrep(c *cli.Context) error {
 		tr := constructTree(files, rs)
 		nodes := getDirectoryNodes(tr)
 
-		if len(paths) > 1 {
+		if len(nodes) == 1 || len(paths) > 1 { // len(nodes) = 1 means a file was passed as input
 			rcid = nodes[0].Cid() // use fake root directory if multiple args
 			writeNode(nodes, wout)
 		} else {
-			rcid = nodes[1].Cid() // otherwise use the first node (which should work)  todo: check this
+			rcid = nodes[1].Cid() // otherwise use the first node (which should work)
 			writeNode(nodes[1:], wout)
 		}
 	}()
