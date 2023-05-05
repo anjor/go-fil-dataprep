@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"github.com/anjor/carlet"
 	"github.com/urfave/cli/v2"
+	"io"
 	"os"
 	"strconv"
 	"time"
@@ -79,6 +80,7 @@ func splitAndCommpAction(c *cli.Context) error {
 	}
 	return nil
 }
+
 func getReader(c *cli.Context) (io.Reader, error) {
 	if c.Args().Present() {
 		path := c.Args().First()
