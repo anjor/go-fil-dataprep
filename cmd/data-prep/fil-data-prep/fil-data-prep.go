@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/anjor/anelace"
-	"github.com/anjor/go-fil-dataprep/cmd/data-prep/utils"
+	"github.com/anjor/carlet"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-merkledag"
 	"github.com/urfave/cli/v2"
@@ -112,7 +112,7 @@ func filDataPrep(c *cli.Context) error {
 	go func() {
 		defer wg.Done()
 
-		carFiles, err := utils.SplitAndCommp(rout, s, o)
+		carFiles, err := carlet.SplitAndCommp(rout, s, o)
 		if err != nil {
 			fmt.Printf("split and commp failed : %s\n", err)
 			return

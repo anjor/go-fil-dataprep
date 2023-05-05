@@ -2,7 +2,7 @@ package split_and_commp
 
 import (
 	"encoding/csv"
-	"github.com/anjor/go-fil-dataprep/cmd/data-prep/utils"
+	"github.com/anjor/carlet"
 	"github.com/urfave/cli/v2"
 	"os"
 	"strconv"
@@ -42,7 +42,7 @@ var splitAndCommpFlags = []cli.Flag{
 
 func splitAndCommpAction(c *cli.Context) error {
 
-	fi, err := utils.GetReader(c)
+	fi, err := getReader(c)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func splitAndCommpAction(c *cli.Context) error {
 	output := c.String("output")
 	meta := c.String("metadata")
 
-	carFiles, err := utils.SplitAndCommp(fi, size, output)
+	carFiles, err := carlet.SplitAndCommp(fi, size, output)
 	if err != nil {
 		return err
 	}
@@ -78,4 +78,16 @@ func splitAndCommpAction(c *cli.Context) error {
 		})
 	}
 	return nil
+}
+func getReader(c *cli.Context) (io.Reader, error) {
+	if c.Args().Present() {
+		path := c.Args().First()
+		fi, err := os.Open(path)
+		if err != nil {
+			return nil, err
+		}
+		return fi, nil
+
+	}
+	return os.Stdin, nil
 }
