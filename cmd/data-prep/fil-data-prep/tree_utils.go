@@ -44,7 +44,7 @@ func (n *node) constructNode() {
 		return
 	}
 	nd := merkledag.NodeWithData(ndbs)
-	nd.SetCidBuilder(cid.V1Builder{Codec: cid.DagCBOR, MhType: multihash.SHA2_256})
+	nd.SetCidBuilder(cid.V1Builder{MhType: multihash.SHA2_256})
 
 	var size uint64
 	for _, child := range n.children {
