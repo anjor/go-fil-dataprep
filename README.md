@@ -1,6 +1,10 @@
 # go-fil-dataprep
 
-And end to end data preparation tool to onboard data to filecoin. 
+An end to end data preparation tool to onboard data to filecoin. This involves generating
+car files, splitting them up to be of a user-specified size and calculating commP, i.e.
+all the steps involved in [data
+preparation](https://github.com/filecoin-project/data-prep-tools/tree/main/docs) in order
+to make storage deals on [filecoin](https://filecoin.io)
 
 ## Installation
 
@@ -14,24 +18,25 @@ The cli supports 2 commands -- `fil-data-prep` and `split-and-commp`.
 
 ### fil-data-prep
 
-This command transforms data into a bunch of car files sized "correctly" (target size provided as an input), calculates commP and saves all of this data in a metadata file.
+This command transforms data into a bunch of car files sized "correctly" (target size
+provided as an input), calculates commP and saves all of this data in a metadata file. It
+also prints out the root cid for the IPLD dag to stdout.
 
 ```
-$data-prep dp --size 1000000 --output a --metadata test_meta.csv subdir2
-root cid = bafybeig3mkjrgyde33grqwyano74pq2x5vcdj4twii5khotua4k4kedpha
+$data-prep fil-data-prep --size 100000000000 --metadata meta.csv --output test 5gb-filecoin-payload.bin
+root cid = bafybeihsshuadcxukrkye76kfeci5mbs7v7o5iq32d2xhzygxnj6s7asw4
 ```
 
 ```
-$cat test_meta.csv
+$ cat meta.csv
 timestamp,original data,car file,root_cid,piece cid,padded piece size
-2023-03-31T12:52:01Z,out,bafybeig3mkjrgyde33grqwyano74pq2x5vcdj4twii5khotua4k4kedpha,out-0.car,baga6ea4seaqcjzz5iztdwawdakw3yel3nkhppyhsxidc3fhkpgq462iednah6na,1024
+2023-05-10T13:04:47Z,test,test-baga6ea4seaqnxhbabidowdpd6pl3bombnh2jw3r2uu2s37ippoam5vergcxmyny-0.car,bafybeihsshuadcxukrkye76kfeci5mbs7v7o5iq32d2xhzygxnj6s7asw4,baga6ea4seaqnxhbabidowdpd6pl3bombnh2jw3r2uu2s37ippoam5vergcxmyny,8589934592
 ```
 ### split-and-commp
 
 This command takes in a car file and splits it into smaller car files of the provided size (roughly). It also calculates commp at the same time and writes it out to a metadata file.
 
 ```
-$ ~/repos/anjor/go-fil-dataprep/cmd/data-prep/data-prep sac --size 100000 --metadata m.csv data.car
-Writing CAR chunk to ./data-0.car
+$data-prep split-and-commp --size 10000 --output a --metadata ma.csv file.car
 ```
 
