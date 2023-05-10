@@ -6,6 +6,8 @@ all the steps involved in [data
 preparation](https://github.com/filecoin-project/data-prep-tools/tree/main/docs) in order
 to make storage deals on [filecoin](https://filecoin.io)
 
+![end-to-end](./images/go-fil-dataprep-flow.png)
+
 ## Installation
 
 ```
