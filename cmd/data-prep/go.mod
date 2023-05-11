@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/anjor/anelace v0.0.0-20230330084912-e7a70b075964
-	github.com/anjor/carlet v0.0.0-20230505101327-2ef1c28faa16
+	github.com/anjor/carlet v0.0.0-20230511201044-6605618601a5
 	github.com/ipfs/go-cid v0.4.1
 	github.com/ipfs/go-ipld-format v0.2.0
 	github.com/ipfs/go-merkledag v0.5.1

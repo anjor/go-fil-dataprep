@@ -27,6 +27,8 @@ github.com/anjor/anelace v0.0.0-20230330084912-e7a70b075964 h1:SnXs3+7G5cxyrWnmj
 github.com/anjor/anelace v0.0.0-20230330084912-e7a70b075964/go.mod h1:yfplZLfw16a1nvufmGLkVtpJXmFdtPpYp0MGSHItATM=
 github.com/anjor/carlet v0.0.0-20230505101327-2ef1c28faa16 h1:EEhoZ/V3cgZ1I/tTQD1cz8QmAi3uPgLG6fwWGALrXT4=
 github.com/anjor/carlet v0.0.0-20230505101327-2ef1c28faa16/go.mod h1:sTpcN668YLQ1cvCT2RcIxifc/soFheI9wbNeDGCJX74=
+github.com/anjor/carlet v0.0.0-20230511201044-6605618601a5 h1:fQ5/r5dju88baq1lqtEOWsr8Zo2mOhs712jspsgy0MM=
+github.com/anjor/carlet v0.0.0-20230511201044-6605618601a5/go.mod h1:sTpcN668YLQ1cvCT2RcIxifc/soFheI9wbNeDGCJX74=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
 github.com/apache/thrift v0.13.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
