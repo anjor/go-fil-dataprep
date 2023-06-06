@@ -8,9 +8,21 @@ import (
 	"os"
 )
 
+var (
+	Version  = ""
+	Revision = ""
+	Build    = ""
+	Branch   = ""
+)
+
 func main() {
+	cli.VersionPrinter = func(cCtx *cli.Context) {
+		fmt.Printf("version=%s revision=%s build=%s branch=%s\n", cCtx.App.Version, Revision, Build, Branch)
+	}
+
 	app := cli.NewApp()
 	app.Name = "fil-dataprep"
+	app.Version = Version
 	app.Usage = "Chunking for CAR files + calculating commP. Splits a CAR file into smaller CAR files and at the same time also calculates commP for the smaller CAR files."
 	app.Commands = []*cli.Command{
 		split_and_commp.Cmd,
