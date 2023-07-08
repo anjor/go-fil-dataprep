@@ -64,11 +64,11 @@ func (n *node) constructNode() {
 	n.size = size
 }
 
-func constructTree(paths []string, rs []roots) *node {
+func constructTree(files []string, rs []roots) *node {
 	root := newNode("root")
 
-	for i, path := range paths {
-		parts := strings.Split(path, "/")
+	for i, file := range files {
+		parts := strings.Split(file, "/")
 		currentNode := root
 
 		for _, part := range parts {
