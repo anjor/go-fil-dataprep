@@ -97,13 +97,19 @@ func filDataPrep(c *cli.Context) error {
 		nodes := getDirectoryNodes(tr)
 
 		if len(nodes) == 1 || len(paths) > 1 { // len(nodes) = 1 means a file was passed as input
-			rcid = nodes[0].Cid() // use fake root directory if multiple args
+			// use fake root directory if multiple args.
+			// If there are nested paths it will wrap all the intermediate directories up in the fake root
+			rcid = nodes[0].Cid()
 			writeNode(nodes, wout)
 		} else {
 			path := paths[0]
+
+			// Need to do this to handle nested paths, where the root cid should be the actual final directory
+			// for example, if the input is /opt/data/data_dir, the root cid should correspond to data_dir and not to /
 			splitPath := strings.Split(path, "/")
 			idx := len(splitPath)
-			rcid = nodes[idx].Cid() // otherwise use the first node (which should work)
+			rcid = nodes[idx].Cid()
+
 			writeNode(nodes[idx:], wout)
 		}
 	}()
