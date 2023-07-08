@@ -100,8 +100,11 @@ func filDataPrep(c *cli.Context) error {
 			rcid = nodes[0].Cid() // use fake root directory if multiple args
 			writeNode(nodes, wout)
 		} else {
-			rcid = nodes[1].Cid() // otherwise use the first node (which should work)
-			writeNode(nodes[1:], wout)
+			path := paths[0]
+			splitPath := strings.Split(path, "/")
+			idx := len(splitPath)
+			rcid = nodes[idx].Cid() // otherwise use the first node (which should work)
+			writeNode(nodes[idx:], wout)
 		}
 	}()
 
@@ -151,15 +154,15 @@ func filDataPrep(c *cli.Context) error {
 }
 
 func writeNode(nodes []*merkledag.ProtoNode, wout *io.PipeWriter) {
-	var cid, sizeVi []byte
+	var c, sizeVi []byte
 	for _, nd := range nodes {
-		cid = []byte(nd.Cid().KeyString())
+		c = []byte(nd.Cid().KeyString())
 		d := nd.RawData()
 
-		sizeVi = appendVarint(sizeVi[:0], uint64(len(cid))+uint64(len(d)))
+		sizeVi = appendVarint(sizeVi[:0], uint64(len(c))+uint64(len(d)))
 
 		if _, err := wout.Write(sizeVi); err == nil {
-			if _, err := wout.Write(cid); err == nil {
+			if _, err := wout.Write(c); err == nil {
 				if _, err := wout.Write(d); err != nil {
 					fmt.Printf("failed to write car: %s\n", err)
 				}
