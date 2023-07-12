@@ -24,6 +24,8 @@ This command transforms data into a bunch of car files sized "correctly" (target
 provided as an input), calculates commP and saves all of this data in a metadata file. It
 also prints out the root cid for the IPLD dag to stdout.
 
+The `--output` flag will optionally prefix resulting car filenames with the provided string
+
 ```
 $data-prep fil-data-prep --size 100000000000 --metadata meta.csv --output test 5gb-filecoin-payload.bin
 root cid = bafybeihsshuadcxukrkye76kfeci5mbs7v7o5iq32d2xhzygxnj6s7asw4
@@ -31,8 +33,8 @@ root cid = bafybeihsshuadcxukrkye76kfeci5mbs7v7o5iq32d2xhzygxnj6s7asw4
 
 ```
 $ cat meta.csv
-timestamp,original data,car file,root_cid,piece cid,padded piece size
-2023-05-10T13:04:47Z,test,test-baga6ea4seaqnxhbabidowdpd6pl3bombnh2jw3r2uu2s37ippoam5vergcxmyny-0.car,bafybeihsshuadcxukrkye76kfeci5mbs7v7o5iq32d2xhzygxnj6s7asw4,baga6ea4seaqnxhbabidowdpd6pl3bombnh2jw3r2uu2s37ippoam5vergcxmyny,8589934592
+timestamp,car file,root_cid,piece cid,padded piece size
+2023-05-10T13:04:47Z,test-baga6ea4seaqnxhbabidowdpd6pl3bombnh2jw3r2uu2s37ippoam5vergcxmyny.car,bafybeihsshuadcxukrkye76kfeci5mbs7v7o5iq32d2xhzygxnj6s7asw4,baga6ea4seaqnxhbabidowdpd6pl3bombnh2jw3r2uu2s37ippoam5vergcxmyny,8589934592
 ```
 ### split-and-commp
 

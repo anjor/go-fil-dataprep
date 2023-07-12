@@ -4,17 +4,18 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"github.com/anjor/anelace"
-	"github.com/anjor/carlet"
-	"github.com/ipfs/go-cid"
-	"github.com/ipfs/go-merkledag"
-	"github.com/urfave/cli/v2"
 	"io"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/anjor/anelace"
+	"github.com/anjor/carlet"
+	"github.com/ipfs/go-cid"
+	"github.com/ipfs/go-merkledag"
+	"github.com/urfave/cli/v2"
 )
 
 var Cmd = &cli.Command{
@@ -27,7 +28,7 @@ var Cmd = &cli.Command{
 			Name:     "output",
 			Aliases:  []string{"o"},
 			Required: false,
-			Usage:    "optional output name for car files. Defaults to filename (stdin if streamed in from stdin).",
+			Usage:    "optional output filename prefix for car filename.",
 		},
 		&cli.IntFlag{
 			Name:     "size",
@@ -118,10 +119,17 @@ func filDataPrep(c *cli.Context) error {
 	m := c.String("metadata")
 	s := c.Int("size")
 
+	var filenamePrefix string
+	if o != "" {
+		// Add a dash to separate prefix from filename
+		// note: we only do this when prefix specified, otherwise filename will begin with "-", which can cause problem with some fs operations as it is interpreted as a flag
+		filenamePrefix = fmt.Sprintf("%s-", o)
+	}
+
 	go func() {
 		defer wg.Done()
 
-		carFiles, err := carlet.SplitAndCommp(rout, s, o)
+		carFiles, err := carlet.SplitAndCommp(rout, s, filenamePrefix)
 		if err != nil {
 			fmt.Printf("split and commp failed : %s\n", err)
 			return
@@ -134,7 +142,7 @@ func filDataPrep(c *cli.Context) error {
 			return
 		}
 		w := csv.NewWriter(f)
-		err = w.Write([]string{"timestamp", "original data", "car file", "root_cid", "piece cid", "padded piece size"})
+		err = w.Write([]string{"timestamp", "car file", "root_cid", "piece cid", "padded piece size"})
 		if err != nil {
 			fmt.Printf("failed to write csv header\n")
 			return
@@ -143,8 +151,7 @@ func filDataPrep(c *cli.Context) error {
 		for _, c := range carFiles {
 			err = w.Write([]string{
 				time.Now().UTC().Format(time.RFC3339),
-				o,
-				c.CarName,
+				c.Name,
 				rcid.String(),
 				c.CommP.String(),
 				strconv.FormatUint(c.PaddedSize, 10),
