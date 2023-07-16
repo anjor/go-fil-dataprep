@@ -2,12 +2,14 @@ package split_and_commp
 
 import (
 	"encoding/csv"
-	"github.com/anjor/carlet"
-	"github.com/urfave/cli/v2"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/anjor/carlet"
+	"github.com/urfave/cli/v2"
 )
 
 var Cmd = &cli.Command{
@@ -30,7 +32,7 @@ var splitAndCommpFlags = []cli.Flag{
 		Name:     "output",
 		Aliases:  []string{"o"},
 		Required: true,
-		Usage:    "optional output name for car files. Defaults to filename (stdin if streamed in from stdin).",
+		Usage:    "optional output filename prefix for car files.",
 	},
 	&cli.StringFlag{
 		Name:     "metadata",
@@ -52,7 +54,13 @@ func splitAndCommpAction(c *cli.Context) error {
 	output := c.String("output")
 	meta := c.String("metadata")
 
-	carFiles, err := carlet.SplitAndCommp(fi, size, output)
+	var filenamePrefix string
+
+	if output != "" {
+		filenamePrefix = fmt.Sprintf("%s-", output)
+	}
+
+	carFiles, err := carlet.SplitAndCommp(fi, size, filenamePrefix)
 	if err != nil {
 		return err
 	}
@@ -64,7 +72,7 @@ func splitAndCommpAction(c *cli.Context) error {
 	}
 
 	w := csv.NewWriter(f)
-	err = w.Write([]string{"timestamp", "original data", "car file", "piece cid", "padded piece size"})
+	err = w.Write([]string{"timestamp", "car file", "piece cid", "padded piece size"})
 	if err != nil {
 		return err
 	}
@@ -72,8 +80,7 @@ func splitAndCommpAction(c *cli.Context) error {
 	for _, c := range carFiles {
 		err = w.Write([]string{
 			time.Now().Format(time.RFC3339),
-			output,
-			c.CarName,
+			c.Name,
 			c.CommP.String(),
 			strconv.FormatUint(c.PaddedSize, 10),
 		})
